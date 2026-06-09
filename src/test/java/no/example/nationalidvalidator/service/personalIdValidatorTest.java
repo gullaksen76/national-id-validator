@@ -37,7 +37,9 @@ class PersonalIdValidatorTest {
             "01010112377",  // born 01.01.01, individual number 123
             "15069012377",  // born 15.06.90, individual number 123
             "01010099931",  // born 01.01.00, individual number 999
-            "31129900183"   // born 31.12.99, individual number 001
+            "31129900183",  // born 31.12.99, individual number 001
+            "15068505094",  // generated: born 15.06.85, individual 050 (legacy)
+            "22127512357"   // generated: born 22.12.75, individual 123 (legacy)
         })
         @DisplayName("Valid national identity numbers are accepted with type FODSELSNUMMER")
         void validOrdinaryNumbers(String number) {
@@ -70,11 +72,13 @@ class PersonalIdValidatorTest {
 
         @ParameterizedTest(name = "[{index}] {0} is valid")
         @ValueSource(strings = {
-            "02013299997",
-            "30108299920",
-            "30108299939"
+            "02013299997",  // Skatteetaten example
+            "30108299920",  // Skatteetaten example
+            "30108299939",  // Skatteetaten example
+            "10033320014",  // generated: born 10.03.33, individual 200
+            "05114050050"   // generated: born 05.11.40, individual 500
         })
-        @DisplayName("Skatteetaten 2032 examples are accepted")
+        @DisplayName("Skatteetaten 2032 examples and generated 2032+ numbers are accepted")
         void skatteetaten2032ExamplesAreAccepted(String number) {
             ValidationResult result = validator.validate(number);
 
