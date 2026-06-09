@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: national-id-validator
+
+server:
+  port: 8080
+
+logging:
+  level:
+    no.example.nationalidvalidator: DEBUG
