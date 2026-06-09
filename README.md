@@ -140,10 +140,15 @@ Weights for legacy calculation:
 
 ### Organization Number (9 digits)
 
+According to [Brønnøysundregistrene](https://www.brreg.no/om-oss/registrene-vare/om-enhetsregisteret/organisasjonsnummeret/):
+
 1. **Length** — exactly 9 digits
 2. **Numeric only** — all characters must be digits
-3. **First digit** — must be 8 or 9
-4. **Control digit** — position 9 uses weights `3 2 7 6 5 4 3 2` with mod-11
+3. **First digit** — must be 8 or 9 (business convention for identifying entity types)
+4. **Control digit** — position 9 is calculated as: `11 − (weighted_sum mod 11)`
+   - Weights (left to right): `3 2 7 6 5 4 3 2` applied to first 8 digits
+   - If result is 10, the number is invalid (structural invalidity)
+   - If result is 11, it becomes 0
 
 ## Building
 
@@ -178,8 +183,8 @@ public class ValidatorConfig {
 
 ## References
 
-- Skatteetaten: [Fødselsnummeret](https://www.skatteetaten.no/person/folkeregister/om-fonnummeret/)
-- Brønnøysundregistrene: [Organisasjonsnummeret](https://www.brreg.no/om-oss/oppgaver-og-organisasjon/nasjonale-registre-og-databaser/om-organisasjonsregisteret/)
+- Skatteetaten: [Fødselsnummeret og D-nummer](https://www.skatteetaten.no/person/folkeregister/om-fonnummeret/)
+- Brønnøysundregistrene: [Organisasjonsnummeret](https://www.brreg.no/om-oss/registrene-vare/om-enhetsregisteret/organisasjonsnummeret/)
 
 ## License
 

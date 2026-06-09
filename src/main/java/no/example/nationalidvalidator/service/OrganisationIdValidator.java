@@ -7,9 +7,20 @@ import no.example.nationalidvalidator.model.ValidationResult;
 /**
  * Validates Norwegian organization numbers (organisasjonsnummer).
  *
- * <p>An organization number consists of 9 digits where the first digit must be
- * 8 or 9, and the last digit is a control digit computed using a weighted mod-11 sum.
- * The algorithm is specified by Brønnøysundregistrene.
+ * <p>An organization number consists of 9 digits. The last digit is a control digit
+ * computed using a weighted mod-11 sum according to Brønnøysundregistrene specification:
+ * https://www.brreg.no/om-oss/registrene-vare/om-enhetsregisteret/organisasjonsnummeret/
+ *
+ * <p><strong>Validation steps:</strong>
+ * <ol>
+ *   <li>Must be exactly 9 numeric digits
+ *   <li>First digit must be 8 or 9 (business convention, not explicitly stated by Brønnøysundregistrene
+ *       but used in practice to identify entity types)
+ *   <li>Control digit (position 9) must be: 11 - (weighted_sum mod 11), where result 10 is invalid
+ * </ol>
+ *
+ * <p><strong>Control digit calculation:</strong> Weights are 3, 2, 7, 6, 5, 4, 3, 2 applied
+ * to the first 8 digits from left to right. Result 10 from the formula indicates structural invalidity.
  *
  * <p>This class is stateless and thread-safe. A single instance can be shared freely.
  */
