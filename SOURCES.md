@@ -15,10 +15,19 @@ This document outlines the official sources and specifications used in this vali
 
 ### 2032 Control Digit Specification
 - **Source:** Skatteetaten (2032 PID modernization)
+- **Official Documentation:** https://skatteetaten.github.io/folkeregisteret-api-dokumentasjon/nytt-fodselsnummer-fra-2032/
 - **Details:** Updated control digit calculation allowing more flexible remainders
   - Legacy: k1_remainder must produce valid digit (0-9, not 10)
   - 2032: k1_remainder ∈ {0, 1, 2, 3} (more flexible)
   - Both regimes validated for compatibility
+- **Test Examples from Official Documentation:**
+  - `02013299997` — Birth date 02.01.2032 (synthetic test number)
+  - `30108299920` — Person born 30.10.1982 (assigned in 2032, first variant)
+  - `30108299939` — Person born 30.10.1982 (assigned in 2032, second variant)
+- **Additional Resources:**
+  - Source code validators available in Java and JavaScript on the GitHub page
+  - Interactive testing application available at Skatteetaten website
+  - Important note: Validators confirm control digit correctness but do NOT verify actual registration in Folkeregisteret
 
 ## Organization Numbers (Organisasjonsnummer)
 
@@ -50,26 +59,37 @@ This document outlines the official sources and specifications used in this vali
 
 ## Test Data Sources
 
+### Official Skatteetaten Test Examples
+
+**2032 PID Test Numbers (from official documentation):**
+- Source: https://skatteetaten.github.io/folkeregisteret-api-dokumentasjon/nytt-fodselsnummer-fra-2032/
+- `02013299997` — Synthetic test number (birth date 02.01.2032)
+- `30108299920` — Person born 30.10.1982 (2032 assignment, variant 1)
+- `30108299939` — Person born 30.10.1982 (2032 assignment, variant 2)
+
+These are provided by Skatteetaten for testing the 2032 control digit calculation.
+
 ### Finding Valid and Invalid Test Numbers
 
-Skatteetaten does not publish an official public dataset of test fødselsnummer.
+Skatteetaten does not publish a comprehensive public dataset of test fødselsnummer.
 However, the following resources may contain useful information:
 
-1. **Altinn** — Norwegian Government's digital services platform
+1. **Skatteetaten Folkeregisteret API Documentation (GitHub)**
+   - URL: https://skatteetaten.github.io/folkeregisteret-api-dokumentasjon/
+   - Includes source code validators in Java and JavaScript
+   - Interactive testing application available
+   - **Important:** Validators check control digit correctness but do NOT verify actual registration
+
+2. **Altinn** — Norwegian Government's digital services platform
    - URL: https://www.altinn.no/
    - May contain API documentation with test examples
-
-2. **Skatteetaten API Documentation**
-   - Contact: Skatteetaten's developer support
-   - May provide test datasets for their services
 
 3. **Direktoratet for e-helse** — Norwegian Health Authority
    - Maintains health-related test data
    - May include test fødselsnummer for health systems
 
 4. **Folkeregisteret** — Central Population Register
-   - May provide testing guidelines
-   - Contact: Skatteetaten directly
+   - Contact: Skatteetaten directly for testing guidelines
 
 ### Best Practices for Test Data
 

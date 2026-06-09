@@ -184,6 +184,9 @@ public class ValidatorConfig {
 ## References
 
 - Skatteetaten: [Fødselsnummeret og D-nummer](https://www.skatteetaten.no/person/folkeregister/om-fonnummeret/)
+- Skatteetaten (GitHub): [Folkeregisteret API Documentation - 2032 PID](https://skatteetaten.github.io/folkeregisteret-api-dokumentasjon/nytt-fodselsnummer-fra-2032/)
+  - Includes test examples: `02013299997`, `30108299920`, `30108299939`
+  - Source code validators available
 - Brønnøysundregistrene: [Organisasjonsnummeret](https://www.brreg.no/om-oss/registrene-vare/om-enhetsregisteret/organisasjonsnummeret/)
 
 ## License
