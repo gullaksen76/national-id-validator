@@ -39,24 +39,24 @@ public class FodselsnummerValidator {
      * @return a {@link ValidationResult} describing whether the number is valid
      */
     public ValidationResult validate(final String number) {
-        log.debug("Validating fødselsnummer: {}", number);
+        log.debug("Validating national identity number: {}", number);
 
         if (!hasValidFormat(number)) {
-            return ValidationResult.invalid("Ugyldig format: må bestå av nøyaktig 11 siffer");
+            return ValidationResult.invalid("Invalid format: must be exactly 11 digits");
         }
 
         final int[] digits = toDigits(number);
 
         if (!hasValidCheckDigits(digits)) {
-            return ValidationResult.invalid("Ugyldig kontrollsiffer");
+            return ValidationResult.invalid("Invalid check digits");
         }
 
         if (!hasValidDate(digits)) {
-            return ValidationResult.invalid("Ugyldig dato i nummeret");
+            return ValidationResult.invalid("Invalid date in number");
         }
 
         final IdType type = determineType(digits);
-        log.debug("Fødselsnummer {} is valid, type={}", number, type);
+        log.debug("National identity number {} is valid, type={}", number, type);
         return ValidationResult.valid(type);
     }
 

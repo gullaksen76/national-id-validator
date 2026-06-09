@@ -3,7 +3,7 @@ package no.example.nationalidvalidator.model;
 import lombok.Builder;
 import lombok.Value;
 
-/** Internal result produced by a validator service. */
+/** Immutable result produced by a validator. */
 @Value
 @Builder
 public class ValidationResult {
@@ -22,7 +22,7 @@ public class ValidationResult {
         return ValidationResult.builder()
                 .valid(true)
                 .idType(idType)
-                .message("Gyldig")
+                .message("Valid")
                 .build();
     }
 

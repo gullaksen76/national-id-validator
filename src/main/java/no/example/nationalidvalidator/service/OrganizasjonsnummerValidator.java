@@ -30,24 +30,24 @@ public class OrganizasjonsnummerValidator {
      * @return a {@link ValidationResult} describing whether the number is valid
      */
     public ValidationResult validate(final String number) {
-        log.debug("Validating organisasjonsnummer: {}", number);
+        log.debug("Validating organization number: {}", number);
 
         if (!hasValidFormat(number)) {
-            return ValidationResult.invalid("Ugyldig format: må bestå av nøyaktig 9 siffer");
+            return ValidationResult.invalid("Invalid format: must be exactly 9 digits");
         }
 
         final int[] digits = toDigits(number);
 
         if (!hasValidFirstDigit(digits)) {
             return ValidationResult.invalid(
-                    "Ugyldig første siffer: organisasjonsnummer må starte med 8 eller 9");
+                    "Invalid first digit: organization number must start with 8 or 9");
         }
 
         if (!hasValidCheckDigit(digits)) {
-            return ValidationResult.invalid("Ugyldig kontrollsiffer");
+            return ValidationResult.invalid("Invalid check digit");
         }
 
-        log.debug("Organisasjonsnummer {} is valid", number);
+        log.debug("Organization number {} is valid", number);
         return ValidationResult.valid(IdType.ORGANISASJONSNUMMER);
     }
 

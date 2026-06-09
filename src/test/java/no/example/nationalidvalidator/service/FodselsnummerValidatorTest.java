@@ -27,34 +27,34 @@ class FodselsnummerValidatorTest {
     // ---------------------------------------------------------------------------
 
     @Nested
-    @DisplayName("Gyldige ordinære fødselsnumre")
+    @DisplayName("Valid ordinary national identity numbers")
     class ValidOrdinaryNumbers {
 
-        @ParameterizedTest(name = "[{index}] {0} er gyldig")
+        @ParameterizedTest(name = "[{index}] {0} is valid")
         @ValueSource(strings = {
-            "01010112377",  // born 01.01.01, individ 123
-            "15069012377",  // born 15.06.90, individ 123
-            "01010099931",  // born 01.01.00, individ 999
-            "31129900183"   // born 31.12.99, individ 001
+            "01010112377",  // born 01.01.01, individual number 123
+            "15069012377",  // born 15.06.90, individual number 123
+            "01010099931",  // born 01.01.00, individual number 999
+            "31129900183"   // born 31.12.99, individual number 001
         })
-        @DisplayName("Gyldige fødselsnumre er gyldige og har type FODSELSNUMMER")
+        @DisplayName("Valid national identity numbers are accepted with type FODSELSNUMMER")
         void validOrdinaryNumbers(String number) {
             ValidationResult result = validator.validate(number);
 
             assertThat(result.isValid()).isTrue();
             assertThat(result.getIdType()).isEqualTo(IdType.FODSELSNUMMER);
-            assertThat(result.getMessage()).isEqualTo("Gyldig");
+            assertThat(result.getMessage()).isEqualTo("Valid");
         }
     }
 
     @Nested
-    @DisplayName("Gyldige D-numre")
+    @DisplayName("Valid D-numbers")
     class ValidDNumbers {
 
         @Test
-        @DisplayName("D-nummer (dag + 40) er gyldig og identifisert som D_NUMBER")
+        @DisplayName("D-number (day + 40) is accepted and identified as D_NUMBER")
         void validDNumber() {
-            // Born 05.08.1980, individ 300; day field = 05 + 40 = 45
+            // Born 05.08.1980, individual number 300; day field = 05 + 40 = 45
             ValidationResult result = validator.validate("45088030013");
 
             assertThat(result.isValid()).isTrue();
@@ -63,14 +63,14 @@ class FodselsnummerValidatorTest {
     }
 
     @Nested
-    @DisplayName("Gyldige H-numre")
+    @DisplayName("Valid H-numbers")
     class ValidHNumbers {
 
         @Test
-        @DisplayName("H-nummer (måned + 40) er gyldig og identifisert som H_NUMBER")
+        @DisplayName("H-number (month + 40) is accepted and identified as H_NUMBER")
         void validHNumber() {
-            // Born 15.01.1985, individ 200; month field = 01 + 40 = 41
-            // k1 = 7, k2 = 5  →  number = "15418520075"
+            // Born 15.01.1985, individual number 200; month field = 01 + 40 = 41
+            // k1 = 7, k2 = 5  ->  number = "15418520075"
             ValidationResult result = validator.validate("15418520075");
 
             assertThat(result.isValid()).isTrue();
@@ -83,27 +83,27 @@ class FodselsnummerValidatorTest {
     // ---------------------------------------------------------------------------
 
     @Nested
-    @DisplayName("Ugyldige fødselsnumre — format")
+    @DisplayName("Invalid national identity numbers — format")
     class InvalidFormat {
 
-        @ParameterizedTest(name = "[{index}] null/tom streng er ugyldig")
+        @ParameterizedTest(name = "[{index}] null/empty string is invalid")
         @NullAndEmptySource
-        @DisplayName("Null og tom streng er ugyldig")
+        @DisplayName("Null and empty string are rejected")
         void nullAndEmptyAreInvalid(String number) {
             ValidationResult result = validator.validate(number);
 
             assertThat(result.isValid()).isFalse();
         }
 
-        @ParameterizedTest(name = "[{index}] '{0}' er ugyldig format")
+        @ParameterizedTest(name = "[{index}] '{0}' has invalid format")
         @ValueSource(strings = {
-            "1234567890",     // 10 siffer
-            "123456789012",   // 12 siffer
-            "0101011237A",    // bokstav i nummeret
-            "           ",    // bare mellomrom
-            "01 010 112 377"  // mellomrom i nummeret
+            "1234567890",     // 10 digits — too short
+            "123456789012",   // 12 digits — too long
+            "0101011237A",    // contains a letter
+            "           ",    // whitespace only
+            "01 010 112 377"  // contains spaces
         })
-        @DisplayName("Feil lengde eller ikke-numeriske tegn gir ugyldig resultat")
+        @DisplayName("Wrong length or non-numeric characters are rejected")
         void wrongFormatIsInvalid(String number) {
             ValidationResult result = validator.validate(number);
 
@@ -112,20 +112,20 @@ class FodselsnummerValidatorTest {
     }
 
     // ---------------------------------------------------------------------------
-    // Invalid numbers — control digits
+    // Invalid numbers — check digits
     // ---------------------------------------------------------------------------
 
     @Nested
-    @DisplayName("Ugyldige fødselsnumre — kontrollsiffer")
+    @DisplayName("Invalid national identity numbers — check digits")
     class InvalidCheckDigits {
 
-        @ParameterizedTest(name = "[{index}] '{0}' har ugyldig kontrollsiffer")
+        @ParameterizedTest(name = "[{index}] '{0}' has invalid check digits")
         @ValueSource(strings = {
-            "01010112345",  // k1 bør være 7, ikke 4
-            "15069012370",  // k2 bør være 7, ikke 0
-            "01010112300"   // begge kontrollsiffer feil
+            "01010112345",  // k1 should be 7, not 4
+            "15069012370",  // k2 should be 7, not 0
+            "01010112300"   // both check digits wrong
         })
-        @DisplayName("Galt kontrollsiffer gir ugyldig resultat")
+        @DisplayName("Wrong check digits are rejected")
         void wrongCheckDigitsAreInvalid(String number) {
             ValidationResult result = validator.validate(number);
 
@@ -138,13 +138,13 @@ class FodselsnummerValidatorTest {
     // ---------------------------------------------------------------------------
 
     @Nested
-    @DisplayName("Ugyldige fødselsnumre — dato")
+    @DisplayName("Invalid national identity numbers — date")
     class InvalidDate {
 
         @Test
-        @DisplayName("Alle nuller gir ugyldig dato (dag 0 og måned 0)")
+        @DisplayName("All-zeros number is rejected due to invalid date (day 0, month 0)")
         void allZerosIsInvalidDate() {
-            // "00000000000" har k1=k2=0 (passerer kontrollsiffer), men dag=0 er ugyldig
+            // "00000000000" passes check digit validation (k1=k2=0) but day=0 is invalid
             ValidationResult result = validator.validate("00000000000");
 
             assertThat(result.isValid()).isFalse();
@@ -156,21 +156,21 @@ class FodselsnummerValidatorTest {
     // ---------------------------------------------------------------------------
 
     @Nested
-    @DisplayName("Resultatstruktur")
+    @DisplayName("Result structure")
     class ResultStructure {
 
         @Test
-        @DisplayName("Gyldig nummer returnerer isValid=true, idType satt og melding 'Gyldig'")
+        @DisplayName("Valid number returns isValid=true, non-null idType and message 'Valid'")
         void validResultHasCorrectFields() {
             ValidationResult result = validator.validate("01010112377");
 
             assertThat(result.isValid()).isTrue();
             assertThat(result.getIdType()).isNotNull();
-            assertThat(result.getMessage()).isEqualTo("Gyldig");
+            assertThat(result.getMessage()).isEqualTo("Valid");
         }
 
         @Test
-        @DisplayName("Ugyldig nummer returnerer isValid=false, idType null og en feilmelding")
+        @DisplayName("Invalid number returns isValid=false, null idType and a non-blank message")
         void invalidResultHasCorrectFields() {
             ValidationResult result = validator.validate("12345678901");
 

@@ -22,47 +22,55 @@ class OrganizasjonsnummerValidatorTest {
         validator = new OrganizasjonsnummerValidator();
     }
 
+    // ---------------------------------------------------------------------------
+    // Valid numbers
+    // ---------------------------------------------------------------------------
+
     @Nested
-    @DisplayName("Gyldige organisasjonsnumre")
+    @DisplayName("Valid organization numbers")
     class ValidNumbers {
 
-        @ParameterizedTest(name = "[{index}] {0} er gyldig")
+        @ParameterizedTest(name = "[{index}] {0} is valid")
         @ValueSource(strings = {
             "974760843",  // Skatteetaten
             "971032146",  // NAV
-            "812345672"   // beregnet testnummer
+            "812345672"   // computed test number
         })
-        @DisplayName("Kjente gyldige organisasjonsnumre er gyldige")
+        @DisplayName("Known valid organization numbers are accepted")
         void validOrganizationNumbers(String number) {
             ValidationResult result = validator.validate(number);
 
             assertThat(result.isValid()).isTrue();
             assertThat(result.getIdType()).isEqualTo(IdType.ORGANISASJONSNUMMER);
-            assertThat(result.getMessage()).isEqualTo("Gyldig");
+            assertThat(result.getMessage()).isEqualTo("Valid");
         }
     }
 
+    // ---------------------------------------------------------------------------
+    // Invalid numbers — format
+    // ---------------------------------------------------------------------------
+
     @Nested
-    @DisplayName("Ugyldige organisasjonsnumre — format")
+    @DisplayName("Invalid organization numbers — format")
     class InvalidFormat {
 
-        @ParameterizedTest(name = "[{index}] null/tom streng er ugyldig")
+        @ParameterizedTest(name = "[{index}] null/empty string is invalid")
         @NullAndEmptySource
-        @DisplayName("Null og tom streng er ugyldig")
+        @DisplayName("Null and empty string are rejected")
         void nullAndEmptyAreInvalid(String number) {
             ValidationResult result = validator.validate(number);
 
             assertThat(result.isValid()).isFalse();
         }
 
-        @ParameterizedTest(name = "[{index}] '{0}' er ugyldig format")
+        @ParameterizedTest(name = "[{index}] '{0}' has invalid format")
         @ValueSource(strings = {
-            "12345678",     // 8 siffer — for kort
-            "1234567890",   // 10 siffer — for langt
-            "97476084A",    // bokstav
-            "974 760 843"   // mellomrom
+            "12345678",     // 8 digits — too short
+            "1234567890",   // 10 digits — too long
+            "97476084A",    // contains a letter
+            "974 760 843"   // contains spaces
         })
-        @DisplayName("Feil lengde eller ikke-numeriske tegn gir ugyldig resultat")
+        @DisplayName("Wrong length or non-numeric characters are rejected")
         void wrongFormatIsInvalid(String number) {
             ValidationResult result = validator.validate(number);
 
@@ -70,17 +78,21 @@ class OrganizasjonsnummerValidatorTest {
         }
     }
 
+    // ---------------------------------------------------------------------------
+    // Invalid numbers — first digit
+    // ---------------------------------------------------------------------------
+
     @Nested
-    @DisplayName("Ugyldige organisasjonsnumre — første siffer")
+    @DisplayName("Invalid organization numbers — first digit")
     class InvalidFirstDigit {
 
-        @ParameterizedTest(name = "[{index}] '{0}' har ugyldig første siffer")
+        @ParameterizedTest(name = "[{index}] '{0}' has an invalid first digit")
         @ValueSource(strings = {
-            "174760843",  // starter med 1
-            "074760843",  // starter med 0
-            "574760843"   // starter med 5
+            "174760843",  // starts with 1
+            "074760843",  // starts with 0
+            "574760843"   // starts with 5
         })
-        @DisplayName("Organisasjonsnummer som ikke starter med 8 eller 9 er ugyldig")
+        @DisplayName("Organization numbers not starting with 8 or 9 are rejected")
         void invalidFirstDigit(String number) {
             ValidationResult result = validator.validate(number);
 
@@ -88,17 +100,21 @@ class OrganizasjonsnummerValidatorTest {
         }
     }
 
+    // ---------------------------------------------------------------------------
+    // Invalid numbers — check digit
+    // ---------------------------------------------------------------------------
+
     @Nested
-    @DisplayName("Ugyldige organisasjonsnumre — kontrollsiffer")
+    @DisplayName("Invalid organization numbers — check digit")
     class InvalidCheckDigit {
 
-        @ParameterizedTest(name = "[{index}] '{0}' har ugyldig kontrollsiffer")
+        @ParameterizedTest(name = "[{index}] '{0}' has an invalid check digit")
         @ValueSource(strings = {
-            "974760844",  // korrekt er 3, ikke 4
-            "971032140",  // korrekt er 6, ikke 0
-            "812345671"   // korrekt er 2, ikke 1
+            "974760844",  // correct is 3, not 4
+            "971032140",  // correct is 6, not 0
+            "812345671"   // correct is 2, not 1
         })
-        @DisplayName("Galt kontrollsiffer gir ugyldig resultat")
+        @DisplayName("Wrong check digit is rejected")
         void wrongCheckDigitIsInvalid(String number) {
             ValidationResult result = validator.validate(number);
 
@@ -106,22 +122,26 @@ class OrganizasjonsnummerValidatorTest {
         }
     }
 
+    // ---------------------------------------------------------------------------
+    // Result structure
+    // ---------------------------------------------------------------------------
+
     @Nested
-    @DisplayName("Resultatstruktur")
+    @DisplayName("Result structure")
     class ResultStructure {
 
         @Test
-        @DisplayName("Gyldig nummer har isValid=true og type ORGANISASJONSNUMMER")
+        @DisplayName("Valid number returns isValid=true and type ORGANISASJONSNUMMER")
         void validResultHasCorrectFields() {
             ValidationResult result = validator.validate("974760843");
 
             assertThat(result.isValid()).isTrue();
             assertThat(result.getIdType()).isEqualTo(IdType.ORGANISASJONSNUMMER);
-            assertThat(result.getMessage()).isEqualTo("Gyldig");
+            assertThat(result.getMessage()).isEqualTo("Valid");
         }
 
         @Test
-        @DisplayName("Ugyldig nummer har isValid=false, null idType og en feilmelding")
+        @DisplayName("Invalid number returns isValid=false, null idType and a non-blank message")
         void invalidResultHasCorrectFields() {
             ValidationResult result = validator.validate("000000000");
 
