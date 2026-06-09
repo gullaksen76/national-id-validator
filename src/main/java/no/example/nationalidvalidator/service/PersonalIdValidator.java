@@ -237,19 +237,23 @@ public class PersonalIdValidator {
 
     /**
      * Determines which control digit regime(s) validate the given number.
+     *
+     * Legacy (mod-11): k1 = 11 - (sum % 11), where 0-9 valid, 10 invalid
+     *                  k2 = 11 - (sum % 11), where 0-9 valid, 10 invalid
+     * 2032 (PID):      k1_remainder ∈ {0,1,2,3}, k2_remainder = 0
      */
     private ControlDigitRegime determineControlDigitRegime(final int[] digits) {
-        final boolean hasValidK1Remainder = hasValidK1Remainder(digits);
-        final boolean hasValidK2Remainder = hasValidK2Remainder(digits);
-
-        final boolean legacyValid = !isLegacyStructurallyInvalid(digits)
-                && hasValidK1Remainder
-                && hasValidK2Remainder;
-        final boolean pid2032Valid = VALID_K1_REMAINDERS.contains(computeRemainder(
+        final int k1Remainder = computeRemainder(
                 digits,
                 K1_WEIGHTS,
-                FIRST_CHECK_DIGIT_INDEX))
-                && hasValidK2Remainder;
+                FIRST_CHECK_DIGIT_INDEX);
+        final int k2Remainder = computeRemainder(
+                digits,
+                K2_WEIGHTS,
+                SECOND_CHECK_DIGIT_INDEX);
+
+        final boolean legacyValid = k1Remainder != 1 && k2Remainder == 0;
+        final boolean pid2032Valid = VALID_K1_REMAINDERS.contains(k1Remainder) && k2Remainder == 0;
 
         if (legacyValid && pid2032Valid) {
             return ControlDigitRegime.BOTH;
@@ -260,14 +264,5 @@ public class PersonalIdValidator {
         } else {
             return ControlDigitRegime.NONE;
         }
-    }
-
-    /**
-     * Checks if the number is structurally invalid under legacy mod-11 rules
-     * (i.e., would produce check digit 10).
-     */
-    private boolean isLegacyStructurallyInvalid(final int[] digits) {
-        final int k1Remainder = computeRemainder(digits, K1_WEIGHTS, FIRST_CHECK_DIGIT_INDEX);
-        return k1Remainder == 1;  // Would produce check digit 10
     }
 }
