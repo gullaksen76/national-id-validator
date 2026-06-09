@@ -103,6 +103,24 @@ class PersonalIdValidatorTest {
         }
     }
 
+    @Nested
+    @DisplayName("Valid synthetic test numbers")
+    class ValidSyntheticNumbers {
+
+        @ParameterizedTest(name = "[{index}] {0} is valid synthetic")
+        @ValueSource(strings = {
+            "15812510026",  // generated: born 15.01.25, individual 100 (month 01→81)
+            "20863025045"   // generated: born 20.06.30, individual 250 (month 06→86)
+        })
+        @DisplayName("Synthetic test numbers (month + 80) are accepted when validated with synthetic flag")
+        void validSyntheticNumbers(String number) {
+            ValidationResult result = validator.validate(number, true);
+
+            assertThat(result.isValid()).isTrue();
+            assertThat(result.getIdType()).isEqualTo(IdType.FODSELSNUMMER);
+        }
+    }
+
     // ---------------------------------------------------------------------------
     // Invalid numbers — format
     // ---------------------------------------------------------------------------
