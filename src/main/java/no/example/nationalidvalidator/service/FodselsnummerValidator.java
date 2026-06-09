@@ -3,16 +3,16 @@ package no.example.nationalidvalidator.service;
 import lombok.extern.slf4j.Slf4j;
 import no.example.nationalidvalidator.model.IdType;
 import no.example.nationalidvalidator.model.ValidationResult;
-import org.springframework.stereotype.Service;
 
 /**
  * Validates Norwegian national identity numbers (fødselsnummer).
  *
  * <p>Supports regular fødselsnummer, D-numbers (day field + 40) and
  * H-numbers (month field + 40). The algorithm is specified by Skatteetaten.
+ *
+ * <p>This class is stateless and thread-safe. A single instance can be shared freely.
  */
 @Slf4j
-@Service
 public class FodselsnummerValidator {
 
     private static final int EXPECTED_LENGTH = 11;

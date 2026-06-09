@@ -3,7 +3,6 @@ package no.example.nationalidvalidator.service;
 import lombok.extern.slf4j.Slf4j;
 import no.example.nationalidvalidator.model.IdType;
 import no.example.nationalidvalidator.model.ValidationResult;
-import org.springframework.stereotype.Service;
 
 /**
  * Validates Norwegian organization numbers (organisasjonsnummer).
@@ -11,9 +10,10 @@ import org.springframework.stereotype.Service;
  * <p>An organization number consists of 9 digits where the first digit must be
  * 8 or 9, and the last digit is a control digit computed using a weighted mod-11 sum.
  * The algorithm is specified by Brønnøysundregistrene.
+ *
+ * <p>This class is stateless and thread-safe. A single instance can be shared freely.
  */
 @Slf4j
-@Service
 public class OrganizasjonsnummerValidator {
 
     private static final int EXPECTED_LENGTH = 9;

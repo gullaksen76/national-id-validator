@@ -13,10 +13,4 @@
 
     <!-- Suppress final parameters in test classes -->
     <suppress checks="FinalParameters" files=".*Test\.java"/>
-
-    <!-- Suppress HiddenField for Lombok builder inner classes -->
-    <suppress checks="HiddenField" files=".*Builder\.java"/>
-
-    <!-- Suppress VisibilityModifier for DTO classes using Lombok -->
-    <suppress checks="VisibilityModifier" files=".*dto.*\.java"/>
 </suppressions>
