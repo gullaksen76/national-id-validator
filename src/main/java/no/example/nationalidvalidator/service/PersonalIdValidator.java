@@ -4,7 +4,9 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import no.example.nationalidvalidator.model.ControlDigitRegime;
 import no.example.nationalidvalidator.model.IdType;
+import no.example.nationalidvalidator.model.ValidationDetails;
 import no.example.nationalidvalidator.model.ValidationResult;
 
 /**
@@ -65,25 +67,81 @@ public class PersonalIdValidator {
      * @return a {@link ValidationResult} describing whether the number is valid
      */
     public ValidationResult validate(final String number, final boolean synthetic) {
-        log.debug("Validating national identity number");
+        final ValidationDetails details = validateDetails(number, synthetic);
+        if (details.isValid()) {
+            log.debug("National identity number is valid, type={}", details.getIdType());
+            return ValidationResult.valid(details.getIdType());
+        }
+        return ValidationResult.invalid(details.getErrorMessage());
+    }
 
-        if (!hasValidFormat(number)) {
-            return ValidationResult.invalid("Invalid format: must be exactly 11 digits");
+    /**
+     * Validates a Norwegian national identity number with detailed breakdown.
+     *
+     * @param number the input to validate
+     * @return {@link ValidationDetails} with granular validation results
+     */
+    public ValidationDetails validateDetails(final String number) {
+        return validateDetails(number, false);
+    }
+
+    /**
+     * Validates a Norwegian national identity number with detailed breakdown,
+     * optionally treating the number as synthetic.
+     *
+     * @param number the input to validate
+     * @param synthetic whether to interpret the date fields as synthetic test format
+     * @return {@link ValidationDetails} with granular validation results
+     */
+    public ValidationDetails validateDetails(final String number, final boolean synthetic) {
+        log.debug("Detailed validation of national identity number");
+
+        if (number == null || number.isEmpty()) {
+            return ValidationDetails.builder()
+                    .elevenDigits(false)
+                    .numericOnly(false)
+                    .idType(null)
+                    .validStructure(false)
+                    .controlDigitRegime(ControlDigitRegime.NONE)
+                    .build();
+        }
+
+        final boolean isElevenDigits = number.length() == EXPECTED_LENGTH;
+        final boolean isNumericOnly = number.matches("\\d{" + EXPECTED_LENGTH + "}");
+
+        if (!isElevenDigits || !isNumericOnly) {
+            return ValidationDetails.builder()
+                    .elevenDigits(isElevenDigits)
+                    .numericOnly(isNumericOnly && number.length() == EXPECTED_LENGTH)
+                    .idType(null)
+                    .validStructure(false)
+                    .controlDigitRegime(ControlDigitRegime.NONE)
+                    .build();
         }
 
         final int[] digits = toDigits(number);
+        final boolean hasValidDate = hasValidDate(digits, synthetic);
 
-        if (!hasValidDate(digits, synthetic)) {
-            return ValidationResult.invalid("Invalid date in number");
-        }
-
-        if (!hasValidCheckDigits(digits)) {
-            return ValidationResult.invalid("Invalid check digits");
+        if (!hasValidDate) {
+            return ValidationDetails.builder()
+                    .elevenDigits(true)
+                    .numericOnly(true)
+                    .idType(null)
+                    .validStructure(false)
+                    .controlDigitRegime(ControlDigitRegime.NONE)
+                    .build();
         }
 
         final IdType type = determineType(digits, synthetic);
-        log.debug("National identity number is valid, type={}", type);
-        return ValidationResult.valid(type);
+        final ControlDigitRegime regime = determineControlDigitRegime(digits);
+
+        return ValidationDetails.builder()
+                .elevenDigits(true)
+                .numericOnly(true)
+                .idType(type)
+                .validStructure(true)
+                .controlDigitRegime(regime)
+                .build();
     }
 
     private boolean hasValidFormat(final String number) {
@@ -175,5 +233,41 @@ public class PersonalIdValidator {
             return IdType.H_NUMBER;
         }
         return IdType.FODSELSNUMMER;
+    }
+
+    /**
+     * Determines which control digit regime(s) validate the given number.
+     */
+    private ControlDigitRegime determineControlDigitRegime(final int[] digits) {
+        final boolean hasValidK1Remainder = hasValidK1Remainder(digits);
+        final boolean hasValidK2Remainder = hasValidK2Remainder(digits);
+
+        final boolean legacyValid = !isLegacyStructurallyInvalid(digits)
+                && hasValidK1Remainder
+                && hasValidK2Remainder;
+        final boolean pid2032Valid = VALID_K1_REMAINDERS.contains(computeRemainder(
+                digits,
+                K1_WEIGHTS,
+                FIRST_CHECK_DIGIT_INDEX))
+                && hasValidK2Remainder;
+
+        if (legacyValid && pid2032Valid) {
+            return ControlDigitRegime.BOTH;
+        } else if (legacyValid) {
+            return ControlDigitRegime.LEGACY;
+        } else if (pid2032Valid) {
+            return ControlDigitRegime.PID_2032;
+        } else {
+            return ControlDigitRegime.NONE;
+        }
+    }
+
+    /**
+     * Checks if the number is structurally invalid under legacy mod-11 rules
+     * (i.e., would produce check digit 10).
+     */
+    private boolean isLegacyStructurallyInvalid(final int[] digits) {
+        final int k1Remainder = computeRemainder(digits, K1_WEIGHTS, FIRST_CHECK_DIGIT_INDEX);
+        return k1Remainder == 1;  // Would produce check digit 10
     }
 }

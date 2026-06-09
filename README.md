@@ -1,15 +1,28 @@
 # national-id-validator
 
 A lightweight, plain Java library for validating Norwegian national identity numbers
-(fødselsnummer) and organization numbers (organisasjonsnummer).
+(fødselsnummer) and organization numbers (organisasjonsnummer). Supports both legacy
+and 2032 control digit calculation standards as defined by Skatteetaten.
 
 ## Features
 
-- **Fødselsnummer** — standard 11-digit personal identity number
+### Personal Identity Numbers (fødselsnummer)
+
+- **Ordinary fødselsnummer** — standard 11-digit personal identity number
 - **D-number** — assigned to foreign nationals (day field + 40)
 - **H-number** — assigned to patients without a valid fødselsnummer (month field + 40)
-- **Organization number** — 9-digit number issued by Brønnøysundregistrene
+- **2032 control digit support** — validates against both legacy mod-11 and modern 2032 standards
+- **Synthetic test numbers** — special date format for test purposes
+
+### Organization Numbers (organisasjonsnummer)
+
+- **9-digit format** — issued by Brønnøysundregistrene
+- **First digit validation** — must be 8 or 9
+
+### Common Features
+
 - Stateless, thread-safe validators — safe to share as singletons
+- Detailed validation breakdown — understand *why* a number failed
 - SLF4J for logging — bring your own implementation
 
 ## Requirements
@@ -31,10 +44,10 @@ Add the dependency to your `pom.xml`:
 
 ## Usage
 
-### National identity number (fødselsnummer)
+### Basic Validation
 
 ```java
-FodselsnummerValidator validator = new FodselsnummerValidator();
+PersonalIdValidator validator = new PersonalIdValidator();
 
 ValidationResult result = validator.validate("01010112377");
 
@@ -46,20 +59,58 @@ result.getMessage();    // "Valid"
 ValidationResult dResult = validator.validate("45088030013");
 dResult.getIdType();    // IdType.D_NUMBER
 
-// H-number
-ValidationResult hResult = validator.validate("15418520075");
-hResult.getIdType();    // IdType.H_NUMBER
-
-// Invalid
+// Invalid number
 ValidationResult invalid = validator.validate("12345678901");
 invalid.isValid();      // false
-invalid.getMessage();   // human-readable error message
+invalid.getMessage();   // "Invalid check digits"
 ```
 
-### Organization number (organisasjonsnummer)
+### Detailed Validation
+
+Get a granular breakdown of what passed and what failed:
 
 ```java
-OrganizasjonsnummerValidator validator = new OrganizasjonsnummerValidator();
+PersonalIdValidator validator = new PersonalIdValidator();
+
+ValidationDetails details = validator.validateDetails("01010112377");
+
+details.isElevenDigits();              // true
+details.isNumericOnly();               // true
+details.getIdType();                   // IdType.FODSELSNUMMER
+details.isValidStructure();            // true
+details.getControlDigitRegime();       // ControlDigitRegime.LEGACY
+
+// If invalid, get details on what failed:
+ValidationDetails invalid = validator.validateDetails("12345678");
+invalid.isElevenDigits();              // false
+invalid.isNumericOnly();               // true
+invalid.getIdType();                   // null
+invalid.isValidStructure();            // false
+invalid.getControlDigitRegime();       // ControlDigitRegime.NONE
+invalid.getErrorMessage();             // "Invalid format: must be exactly 11 digits"
+```
+
+### Control Digit Regimes
+
+A number can validate under one or both regimes:
+
+```java
+PersonalIdValidator validator = new PersonalIdValidator();
+
+ValidationDetails details = validator.validateDetails("02013299997");
+details.getControlDigitRegime();       // ControlDigitRegime.PID_2032 (2032 only)
+
+ValidationDetails details2 = validator.validateDetails("01010112377");
+details2.getControlDigitRegime();      // ControlDigitRegime.LEGACY (legacy only)
+
+ValidationDetails details3 = validator.validateDetails("some_number");
+details3.getControlDigitRegime();      // ControlDigitRegime.BOTH (validates in both)
+```
+
+### Organization Numbers
+
+```java
+OrganisationIdValidator validator = new OrganisationIdValidator();
 
 ValidationResult result = validator.validate("974760843");
 
@@ -67,60 +118,68 @@ result.isValid();       // true
 result.getIdType();     // IdType.ORGANISASJONSNUMMER
 ```
 
-### Spring applications
+## Validation Rules
 
-Since the validators are plain Java classes they can be registered as beans with no
-additional configuration:
+### Personal Identity Number (11 digits: DDMMYYIIIKK)
+
+The validator checks:
+
+1. **Length** — exactly 11 digits
+2. **Numeric only** — all characters must be digits
+3. **Type identification** — ordinary fødselsnummer, D-number, or H-number
+4. **Date validity** — D/M/Y must form a valid date
+5. **Control digits** — K1 and K2 must match the input, using one or both control regimes
+
+**Control digit regimes:**
+- **Legacy (mod-11):** `k = 11 − (sum mod 11)`. Valid results: 0–9. Result 10 is invalid.
+- **2032 (PID):** `k1_remainder ∈ {0, 1, 2, 3}`, `k2_remainder = 0`. More flexible than legacy.
+
+Weights for legacy calculation:
+- K1: `3 7 6 1 8 9 4 5 2`
+- K2: `5 4 3 2 7 6 5 4 3 2`
+
+### Organization Number (9 digits)
+
+1. **Length** — exactly 9 digits
+2. **Numeric only** — all characters must be digits
+3. **First digit** — must be 8 or 9
+4. **Control digit** — position 9 uses weights `3 2 7 6 5 4 3 2` with mod-11
+
+## Building
+
+```bash
+# Compile, run tests, Checkstyle, and SpotBugs
+mvn verify
+
+# Tests only
+mvn test
+
+# Static analysis only (no tests)
+mvn validate spotbugs:check
+```
+
+## Spring Integration
 
 ```java
 @Configuration
 public class ValidatorConfig {
 
     @Bean
-    public FodselsnummerValidator fodselsnummerValidator() {
-        return new FodselsnummerValidator();
+    public PersonalIdValidator personalIdValidator() {
+        return new PersonalIdValidator();
     }
 
     @Bean
-    public OrganizasjonsnummerValidator organizasjonsnummerValidator() {
-        return new OrganizasjonsnummerValidator();
+    public OrganisationIdValidator organisationIdValidator() {
+        return new OrganisationIdValidator();
     }
 }
 ```
 
-## Algorithm
+## References
 
-### National identity number (11 digits: DDMMYYIIIKK)
-
-Control digits are computed using a weighted mod-11 sum:
-
-| Control digit | Weights |
-|---|---|
-| k1 (position 10) | 3 7 6 1 8 9 4 5 2 |
-| k2 (position 11) | 5 4 3 2 7 6 5 4 3 2 |
-
-Result `= 11 − (sum mod 11)`. Result `11 → 0`. Result `10 → structurally invalid combination`.
-
-**D-number:** day field increased by 40 (day 1–31 → 41–71).  
-**H-number:** month field increased by 40 (month 1–12 → 41–52).
-
-### Organization number (9 digits)
-
-The first digit must be 8 or 9. The control digit (position 9) is computed using weights
-`3 2 7 6 5 4 3 2` over the first eight digits, using the same mod-11 formula as above.
-
-## Building
-
-```bash
-# Compile and run all tests with Checkstyle and SpotBugs
-mvn verify
-
-# Tests only
-mvn test
-
-# Checkstyle + SpotBugs without running tests
-mvn validate spotbugs:check
-```
+- Skatteetaten: [Fødselsnummeret](https://www.skatteetaten.no/person/folkeregister/om-fonnummeret/)
+- Brønnøysundregistrene: [Organisasjonsnummeret](https://www.brreg.no/om-oss/oppgaver-og-organisasjon/nasjonale-registre-og-databaser/om-organisasjonsregisteret/)
 
 ## License
 

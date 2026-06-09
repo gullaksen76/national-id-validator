@@ -2,7 +2,9 @@ package no.example.nationalidvalidator.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import no.example.nationalidvalidator.model.ControlDigitRegime;
 import no.example.nationalidvalidator.model.IdType;
+import no.example.nationalidvalidator.model.ValidationDetails;
 import no.example.nationalidvalidator.model.ValidationResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -209,6 +211,93 @@ class personalIdValidatorTest {
             assertThat(result.isValid()).isFalse();
             assertThat(result.getIdType()).isNull();
             assertThat(result.getMessage()).isNotBlank();
+        }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Detailed validation
+    // ---------------------------------------------------------------------------
+
+    @Nested
+    @DisplayName("Detailed validation")
+    class DetailedValidation {
+
+        @Test
+        @DisplayName("Null input returns all-false details")
+        void nullInputReturnsInvalidDetails() {
+            ValidationDetails details = validator.validateDetails(null);
+
+            assertThat(details.isElevenDigits()).isFalse();
+            assertThat(details.isNumericOnly()).isFalse();
+            assertThat(details.getIdType()).isNull();
+            assertThat(details.isValidStructure()).isFalse();
+            assertThat(details.getControlDigitRegime()).isEqualTo(ControlDigitRegime.NONE);
+            assertThat(details.isValid()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Valid legacy number is identified as LEGACY regime")
+        void validLegacyNumberIsLegacy() {
+            ValidationDetails details = validator.validateDetails("01010112377");
+
+            assertThat(details.isElevenDigits()).isTrue();
+            assertThat(details.isNumericOnly()).isTrue();
+            assertThat(details.getIdType()).isEqualTo(IdType.FODSELSNUMMER);
+            assertThat(details.isValidStructure()).isTrue();
+            assertThat(details.getControlDigitRegime()).isEqualTo(ControlDigitRegime.LEGACY);
+            assertThat(details.isValid()).isTrue();
+            assertThat(details.getErrorMessage()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Valid 2032 PID number is identified as PID_2032 regime")
+        void valid2032NumberIsPid2032() {
+            ValidationDetails details = validator.validateDetails("02013299997");
+
+            assertThat(details.isElevenDigits()).isTrue();
+            assertThat(details.isNumericOnly()).isTrue();
+            assertThat(details.getIdType()).isEqualTo(IdType.FODSELSNUMMER);
+            assertThat(details.isValidStructure()).isTrue();
+            assertThat(details.getControlDigitRegime()).isEqualTo(ControlDigitRegime.PID_2032);
+            assertThat(details.isValid()).isTrue();
+        }
+
+        @ParameterizedTest(name = "[{index}] Invalid input: {0}")
+        @ValueSource(strings = {
+            "1234567890",      // 10 digits
+            "123456789012",    // 12 digits
+            "0101011237A",     // non-numeric
+            "12345678901"      // 11 digits but invalid structure/checksum
+        })
+        @DisplayName("Invalid formats are detected")
+        void invalidFormatsDetected(String number) {
+            ValidationDetails details = validator.validateDetails(number);
+
+            assertThat(details.isValid()).isFalse();
+            assertThat(details.getErrorMessage()).isNotBlank();
+        }
+
+        @Test
+        @DisplayName("Invalid structure gets correct error message")
+        void invalidStructureGetsErrorMessage() {
+            ValidationDetails details = validator.validateDetails("00000000000");
+
+            assertThat(details.isElevenDigits()).isTrue();
+            assertThat(details.isNumericOnly()).isTrue();
+            assertThat(details.isValidStructure()).isFalse();
+            assertThat(details.getErrorMessage()).isEqualTo("Invalid date in number");
+        }
+
+        @Test
+        @DisplayName("Invalid check digits gets correct error message")
+        void invalidCheckDigitsGetsErrorMessage() {
+            ValidationDetails details = validator.validateDetails("01010112345");
+
+            assertThat(details.isElevenDigits()).isTrue();
+            assertThat(details.isNumericOnly()).isTrue();
+            assertThat(details.isValidStructure()).isTrue();
+            assertThat(details.getControlDigitRegime()).isEqualTo(ControlDigitRegime.NONE);
+            assertThat(details.getErrorMessage()).isEqualTo("Invalid check digits");
         }
     }
 }
