@@ -13,13 +13,13 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("OrganizasjonsnummerValidator")
-class OrganizasjonsnummerValidatorTest {
+class OrganisationIdValidatorTest {
 
-    private OrganizasjonsnummerValidator validator;
+    private OrganisationIdValidator validator;
 
     @BeforeEach
     void setUp() {
-        validator = new OrganizasjonsnummerValidator();
+        validator = new OrganisationIdValidator();
     }
 
     // ---------------------------------------------------------------------------

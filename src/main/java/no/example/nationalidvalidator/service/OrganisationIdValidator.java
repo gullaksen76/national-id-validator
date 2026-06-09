@@ -14,7 +14,7 @@ import no.example.nationalidvalidator.model.ValidationResult;
  * <p>This class is stateless and thread-safe. A single instance can be shared freely.
  */
 @Slf4j
-public class OrganizasjonsnummerValidator {
+public class OrganisationIdValidator {
 
     private static final int EXPECTED_LENGTH = 9;
     private static final int MODULUS = 11;

@@ -3,7 +3,9 @@ package no.example.nationalidvalidator.model;
 import lombok.Builder;
 import lombok.Value;
 
-/** Immutable result produced by a validator. */
+/**
+ * Immutable result produced by a validator.
+ */
 @Value
 @Builder
 public class ValidationResult {

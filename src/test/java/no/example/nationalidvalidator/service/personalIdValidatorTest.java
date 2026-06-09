@@ -13,13 +13,13 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("FodselsnummerValidator")
-class FodselsnummerValidatorTest {
+class personalIdValidatorTest {
 
-    private FodselsnummerValidator validator;
+    private PersonalIdValidator validator;
 
     @BeforeEach
     void setUp() {
-        validator = new FodselsnummerValidator();
+        validator = new PersonalIdValidator();
     }
 
     // ---------------------------------------------------------------------------
@@ -59,6 +59,25 @@ class FodselsnummerValidatorTest {
 
             assertThat(result.isValid()).isTrue();
             assertThat(result.getIdType()).isEqualTo(IdType.D_NUMBER);
+        }
+    }
+
+    @Nested
+    @DisplayName("Valid 2032 control digit calculation")
+    class Valid2032ControlDigitCalculation {
+
+        @ParameterizedTest(name = "[{index}] {0} is valid")
+        @ValueSource(strings = {
+            "02013299997",
+            "30108299920",
+            "30108299939"
+        })
+        @DisplayName("Skatteetaten 2032 examples are accepted")
+        void skatteetaten2032ExamplesAreAccepted(String number) {
+            ValidationResult result = validator.validate(number);
+
+            assertThat(result.isValid()).isTrue();
+            assertThat(result.getIdType()).isEqualTo(IdType.FODSELSNUMMER);
         }
     }
 
@@ -148,6 +167,19 @@ class FodselsnummerValidatorTest {
             ValidationResult result = validator.validate("00000000000");
 
             assertThat(result.isValid()).isFalse();
+        }
+
+        @ParameterizedTest(name = "[{index}] '{0}' has an invalid calendar date")
+        @ValueSource(strings = {
+            "31029912370",
+            "31043112344"
+        })
+        @DisplayName("Calendar-invalid dates are rejected")
+        void invalidCalendarDatesAreRejected(String number) {
+            ValidationResult result = validator.validate(number);
+
+            assertThat(result.isValid()).isFalse();
+            assertThat(result.getMessage()).isEqualTo("Invalid date in number");
         }
     }
 
