@@ -26,8 +26,9 @@ This document outlines the official sources and specifications used in this vali
   - `30108299939` — Person born 30.10.1982 (assigned in 2032, second variant)
 - **Additional Resources:**
   - Source code validators available in Java and JavaScript on the GitHub page
-  - Interactive testing application available at Skatteetaten website
-  - Important note: Validators confirm control digit correctness but do NOT verify actual registration in Folkeregisteret
+  - **Interactive testing tool:** https://www.skatteetaten.no/deling/folkeregisteret/pid/validering/
+  - **Important note:** Validators confirm control digit correctness but do NOT verify actual registration in Folkeregisteret
+  - No downloadable test dataset provided; examples are worked manually with control digit calculations shown
 
 ## Organization Numbers (Organisasjonsnummer)
 
