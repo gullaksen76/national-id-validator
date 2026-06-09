@@ -48,6 +48,47 @@ This document outlines the official sources and specifications used in this vali
 4. **Control digit logic** implemented exactly as specified in official documents
 5. **Error messages** designed to help identify validation failure points
 
+## Test Data Sources
+
+### Finding Valid and Invalid Test Numbers
+
+Skatteetaten does not publish an official public dataset of test fødselsnummer.
+However, the following resources may contain useful information:
+
+1. **Altinn** — Norwegian Government's digital services platform
+   - URL: https://www.altinn.no/
+   - May contain API documentation with test examples
+
+2. **Skatteetaten API Documentation**
+   - Contact: Skatteetaten's developer support
+   - May provide test datasets for their services
+
+3. **Direktoratet for e-helse** — Norwegian Health Authority
+   - Maintains health-related test data
+   - May include test fødselsnummer for health systems
+
+4. **Folkeregisteret** — Central Population Register
+   - May provide testing guidelines
+   - Contact: Skatteetaten directly
+
+### Best Practices for Test Data
+
+- **Generate programmatically**: Use valid control digit algorithm to generate test numbers
+- **Use synthetic numbers**: Numbers outside normal date ranges (year 2025+) are unlikely to be real
+- **D-numbers and H-numbers**: Safe for testing as they're administratively assigned
+- **Anonymous data**: Any actual fødselsnummer in production code should be treated as PII
+
+### In This Project
+
+Test data in `PersonalIdValidatorTest.java` includes:
+- Valid ordinary fødselsnummer (public test data)
+- Valid D-numbers
+- Valid H-numbers
+- Skatteetaten 2032 specification examples
+- Invalid format/structure/checksum cases
+
+If you find official Skatteetaten test data resources, please update this document.
+
 ## Future Updates
 
 If official specifications change, this document and the corresponding validation logic will be updated.
