@@ -192,3 +192,5 @@ public class ValidatorConfig {
 ## License
 
 [Apache 2.0](LICENSE)
+
+## Forces a commit and push
